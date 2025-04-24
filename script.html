@@ -483,6 +483,9 @@
     // Ha nincs asztalon kártya, bármit le lehet tenni
     if (!tableCard) return true;
     
+    // Ha az asztalon Joker van, bármilyen kártyát le lehet tenni
+    if (tableCard.type === 'joker') return true;
+    
     // Ugyanolyan típusú kártyát mindig le lehet tenni
     if (card.type === tableCard.type) return true;
     
