@@ -571,8 +571,15 @@
     
     // Nyertes megjelenítése
     const gameResult = document.getElementById('gameResult');
-    const winner = players.find(p => p.id === result.winner);
     
+    // Lekérjük a winner ID-t a játék adatokból
+    const winnerId = result.winner;
+    
+    // Keressük meg a nyertest a players tömbben
+    const winner = players.find(p => p.id === winnerId);
+    
+    // Ha nem találjuk a nyertest a jelenlegi players között,
+    // ellenőrizzük, hogy a saját ID-nk-e
     if (winner) {
       const isYou = winner.id === playerId;
       
@@ -582,9 +589,35 @@
           <div>${isYou ? 'Gratulálunk! Megnyerted a játékot!' : `A győztes: ${winner.name}`}</div>
         </div>
       `;
+    } else if (winnerId === playerId) {
+      // Ha a nyertes ID megegyezik a saját ID-vel, de már nincs a players tömbben
+      gameResult.innerHTML = `
+        <div class="winner-display">
+          <i class="fas fa-trophy fa-2x mb-3"></i>
+          <div>Gratulálunk! Megnyerted a játékot!</div>
+        </div>
+      `;
     } else {
-      gameResult.innerHTML = '<div class="alert alert-warning">A győztes nem található!</div>';
+      // Próbáljuk meg legalább a győztes ID egy részét megmutatni
+      const winnerIdShort = winnerId ? winnerId.substring(0, 8) + '...' : 'ismeretlen';
+      
+      // Figyeljünk, hogy a result.winner tartalmazzon valamit
+      const winnerText = result.winnerName || `Játékos (ID: ${winnerIdShort})`;
+      
+      gameResult.innerHTML = `
+        <div class="winner-display">
+          <i class="fas fa-trophy fa-2x mb-3"></i>
+          <div>A győztes: ${winnerText}</div>
+        </div>
+      `;
     }
+    
+    // Debug információ a konzolba
+    console.log("Játék vége adatok:", {
+      winner: result.winner,
+      playerId: playerId,
+      players: players
+    });
   }
   
   // Kezdőképernyőre visszatérés
