@@ -42,16 +42,19 @@ function initializeDatabase() {
  * Munkalapok létrehozása
  */
 function createSheets(ss) {
-  // Töröljük az alapértelmezett munkalapot
-  const sheets = ss.getSheets();
-  if (sheets.length > 0) {
-    ss.deleteSheet(sheets[0]);
-  }
-  
   // Létrehozzuk a szükséges munkalapokat
   ss.insertSheet('játékok');
   ss.insertSheet('játékosok');
   ss.insertSheet('kártyák');
+  
+  // Az alapértelmezett munkalapot átnevezzük biztonsági mentésnek
+  const sheets = ss.getSheets();
+  for (let i = 0; i < sheets.length; i++) {
+    if (sheets[i].getName() === "Sheet1" || sheets[i].getName() === "Munkalap1") {
+      sheets[i].setName("tartalék");
+      break;
+    }
+  }
   
   // Beállítjuk a fejléceket
   const gamesSheet = ss.getSheetByName('játékok');
