@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optikai Kártyajáték - Előnézet</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome ikonok -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  
+  <style>
+  /* Alap stílusok */
+  body {
+    font-family: 'Quicksand', sans-serif;
+    background-color: #f5f7fa;
+    color: #333;
+    min-height: 100vh;
+  }
+  
+  .container {
+    max-width: 1200px;
+  }
+  
+  /* Kezdőképernyő */
+  .welcome-box {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #6c757d;
+  }
+  
+  .separator::before,
+  .separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .separator::before {
+    margin-right: 1em;
+  }
+  
+  .separator::after {
+    margin-left: 1em;
+  }
+  
+  /* Várakozó képernyő */
+  .waiting-box {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .game-id-display {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  /* Játékos lista */
+  .player-item {
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    background: #f8f9fa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .player-item.creator {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+  }
+  
+  .player-item.current {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+  }
+  
+  .player-badge {
+    font-size: 0.8em;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: #2196f3;
+    color: white;
+    margin-left: 5px;
+  }
+  
+  /* Kártyák stílusa */
+  .game-card {
+    width: 140px;
+    height: 200px;
+    margin: 10px;
+    border-radius: 10px;
+    border: 2px solid;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+    user-select: none;
+  }
+  
+  .game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .game-card.disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .game-card.playable {
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+  }
+  
+  .card-header {
+    padding: 8px;
+    border-bottom: 1px solid;
+    border-color: inherit;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .card-body {
+    padding: 10px;
+    position: relative;
+    height: calc(100% - 40px);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .card-type {
+    font-size: 0.8em;
+    padding: 2px 5px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.5);
+  }
+  
+  .card-icon {
+    font-size: 1.2em;
+  }
+  
+  .card-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-align: center;
+  }
+  
+  .card-description {
+    font-size: 0.9em;
+    text-align: center;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .card-property {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 0.7em;
+    opacity: 0.7;
+  }
+  
+  /* Kártya színek */
+  .card-blue {
+    background-color: #E3F2FD;
+    border-color: #2196F3;
+    color: #0D47A1;
+  }
+  
+  .card-red {
+    background-color: #FFEBEE;
+    border-color: #F44336;
+    color: #B71C1C;
+  }
+  
+  .card-green {
+    background-color: #E8F5E9;
+    border-color: #4CAF50;
+    color: #1B5E20;
+  }
+  
+  .card-yellow {
+    background-color: #FFFDE7;
+    border-color: #FFEB3B;
+    color: #F57F17;
+  }
+  
+  .card-purple {
+    background-color: #F3E5F5;
+    border-color: #9C27B0;
+    color: #4A148C;
+  }
+  
+  .card-orange {
+    background-color: #FFF3E0;
+    border-color: #FF9800;
+    color: #E65100;
+  }
+  
+  .card-black {
+    background-color: #EEEEEE;
+    border-color: #212121;
+    color: #212121;
+  }
+  
+  /* Kártya placeholder */
+  .card-placeholder {
+    width: 140px;
+    height: 200px;
+    margin: 10px;
+    border-radius: 10px;
+    border: 2px dashed #dee2e6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #6c757d;
+    background: #f8f9fa;
+  }
+  
+  /* Játék log */
+  .game-log {
+    max-height: 300px;
+    overflow-y: auto;
+    font-size: 0.9em;
+  }
+  
+  .log-entry {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .log-entry:last-child {
+    border-bottom: none;
+  }
+  
+  .log-time {
+    color: #6c757d;
+    font-size: 0.8em;
+    margin-right: 5px;
+  }
+  
+  /* Játék vége képernyő */
+  .end-game-box {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .winner-display {
+    font-size: 1.5em;
+    font-weight: bold;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 10px;
+    background: #e8f5e9;
+    border: 1px solid #4caf50;
+    color: #1b5e20;
+  }
+  
+  /* Reszponzív beállítások */
+  @media (max-width: 768px) {
+    .game-card {
+      width: 120px;
+      height: 170px;
+      margin: 5px;
+    }
+    
+    .card-placeholder {
+      width: 120px;
+      height: 170px;
+    }
+    
+    .card-description {
+      font-size: 0.8em;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .game-card {
+      width: 100px;
+      height: 150px;
+      margin: 3px;
+    }
+    
+    .card-placeholder {
+      width: 100px;
+      height: 150px;
+    }
+    
+    .card-type, .card-property {
+      font-size: 0.7em;
+    }
+    
+    .card-description {
+      font-size: 0.7em;
+    }
+    
+    .card-icon {
+      font-size: 1em;
+    }
+  }
+  
+  /* Előnézeti mód figyelmeztetés */
+  .preview-warning {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #d32f2f;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    z-index: 9999;
+  }
+  </style>
+</head>
+<body>
+  <div class="preview-warning">
+    Ez csak egy előnézet! A teljes funkcionalitás csak Google Apps Script környezetben érhető el.
+  </div>
+
+  <div class="container py-4">
+    <!-- Kezdőképernyő -->
+    <div id="welcome-screen" class="text-center">
+      <div class="welcome-box">
+        <h1 class="display-4 mb-4">
+          <i class="fas fa-lightbulb me-2 text-warning"></i>
+          Optikai Kártyajáték
+        </h1>
+        <p class="lead mb-4">Ismerkedj meg az optika alapjaival játékos formában!</p>
+        
+        <div class="card shadow-lg mb-4">
+          <div class="card-body">
+            <h2 class="card-title">Játékindítás</h2>
+            <p class="card-text">Add meg a nevedet és válaszd ki, hogyan szeretnél játszani:</p>
+            
+            <div class="mb-3">
+              <label for="playerName" class="form-label">Játékos név:</label>
+              <input type="text" id="playerName" class="form-control" placeholder="Add meg a nevedet">
+            </div>
+            
+            <div class="d-grid gap-2">
+              <button id="createGame" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus-circle me-2"></i>Új játékszoba létrehozása
+              </button>
+              <div class="separator py-2">vagy</div>
+              <div class="join-game-form">
+                <div class="input-group mb-3">
+                  <input type="text" id="gameIdInput" class="form-control" placeholder="Játékszoba azonosító">
+                  <button id="joinGame" class="btn btn-success">
+                    <i class="fas fa-sign-in-alt me-2"></i>Csatlakozás
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card shadow mb-4">
+          <div class="card-body">
+            <h2 class="card-title">Játékszabályok</h2>
+            <p class="mb-2">Az Optikai Kártyajáték egy kártyaalapú oktatójáték, amely segít megismerni az optika alapjait.</p>
+            <div class="text-start">
+              <ul>
+                <li>A játék célja elsőként megszabadulni az összes kártyádtól</li>
+                <li>A játékosok felváltva tesznek le egy-egy kártyát</li>
+                <li>Csak olyan kártyát tehetsz le, amely megegyezik az asztalon lévő kártya színével vagy típusával vagy tulajdonságával</li>
+                <li>Ha nem tudsz kártyát letenni, húznod kell egyet a pakliból</li>
+                <li>A fekete Joker kártyák bármikor kijátszhatók</li>
+              </ul>
+            </div>
+            <div class="text-center mt-3">
+              <button class="btn btn-outline-info" id="showMoreRules">
+                <i class="fas fa-book me-1"></i>Részletes szabályok
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Részletes szabályok modal -->
+    <div class="modal fade" id="rulesModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Részletes játékszabályok</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bezár"></button>
+          </div>
+          <div class="modal-body">
+            <h4>Az Optikai Kártyajáték szabályai</h4>
+            <p>Az Optikai Kártyajáték egy 2-10 fő számára ajánlott oktatójáték, amely az optika alapjainak megismerését segíti elő.</p>
+            
+            <h5>Kártyatípusok:</h5>
+            <ul>
+              <li><strong>Fogalom (kék):</strong> Optikai alapfogalmakat tartalmazó kártyák</li>
+              <li><strong>Törvény (piros):</strong> Optikai törvények és szabályok kártyái</li>
+              <li><strong>Tárgy (zöld):</strong> Optikai tárgyak kártyái</li>
+              <li><strong>Eszköz (sárga):</strong> Komplex optikai eszközök kártyái</li>
+              <li><strong>Alkalmazás (lila):</strong> Fénytani alkalmazások kártyái</li>
+              <li><strong>Példa (narancs):</strong> Konkrét példák optikai jelenségekre</li>
+              <li><strong>Joker (fekete):</strong> Speciális kártyák, bármikor kijátszhatók</li>
+            </ul>
+            
+            <h5>A játék menete:</h5>
+            <ol>
+              <li>Minden játékos 5 kártyával kezd.</li>
+              <li>A játékot létrehozó játékos kezd.</li>
+              <li>A játékosok az óramutató járásával megegyező irányban követik egymást.</li>
+              <li>A soron következő játékos a kezében lévő lapok közül olyat tehet le, amely:
+                <ul>
+                  <li>megegyezik az asztalon lévő kártya színével, vagy</li>
+                  <li>megegyezik az asztalon lévő kártya típusával, vagy</li>
+                  <li>megegyezik az asztalon lévő kártya tulajdonságával</li>
+                </ul>
+              </li>
+              <li>Ha a játékos nem tud kártyát letenni, húznia kell egyet a pakliból.</li>
+              <li>A fekete Joker kártyák bármikor kijátszhatók.</li>
+              <li>A játék addig tart, amíg valaki megszabadul az összes kártyájától.</li>
+            </ol>
+            
+            <h5>Tanulási célok:</h5>
+            <p>A játék közben a résztvevők megismerik:</p>
+            <ul>
+              <li>Az optika alapfogalmait</li>
+              <li>A fényvisszaverődés és fénytörés törvényeit</li>
+              <li>Az optikai eszközök működését</li>
+              <li>A gyakori optikai jelenségek magyarázatát</li>
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bezárás</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Várakozó képernyő -->
+    <div id="waiting-screen" class="d-none text-center">
+      <div class="waiting-box">
+        <h2 class="mb-4">Várakozás a játékosokra</h2>
+        
+        <div class="card shadow mb-4">
+          <div class="card-body">
+            <h3 class="card-title mb-3">Játékszoba azonosító</h3>
+            <div class="game-id-display mb-3">
+              <span id="gameIdDisplay" class="display-6"></span>
+              <button id="copyGameId" class="btn btn-sm btn-outline-secondary ms-2">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+            <p class="text-muted mb-0">Add meg ezt az azonosítót a barátaidnak, hogy csatlakozhassanak a játékhoz!</p>
+          </div>
+        </div>
+        
+        <div class="card shadow mb-4">
+          <div class="card-body">
+            <h3 class="card-title mb-3">Játékosok</h3>
+            <div id="playersList" class="mb-3">
+              <!-- Itt jelennek meg a játékosok -->
+            </div>
+            <div id="creatorControls" class="d-none">
+              <button id="startGameBtn" class="btn btn-success btn-lg">
+                <i class="fas fa-play me-2"></i>Játék indítása
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Játék képernyő -->
+    <div id="game-screen" class="d-none">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="game-area">
+            <div class="game-status-bar d-flex justify-content-between align-items-center mb-3">
+              <div class="game-info">
+                <h3 class="mb-0">Játékszoba: <span id="gameIdGame"></span></h3>
+              </div>
+              <div class="current-player-info">
+                <h4>Soron következő: <span id="currentPlayerName"></span></h4>
+              </div>
+            </div>
+            
+            <div class="table-area mb-4">
+              <div class="card shadow mb-2">
+                <div class="card-body">
+                  <h3 class="card-title mb-3">Asztal</h3>
+                  <div id="tableCardArea" class="d-flex justify-content-center">
+                    <div class="card-placeholder">
+                      <div class="text-center text-muted">
+                        <i class="fas fa-table fa-3x mb-2"></i>
+                        <p>Még nincs kártya az asztalon</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="player-hand mb-4">
+              <div class="card shadow">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="card-title mb-0">Kártyáid</h3>
+                    <div class="action-buttons">
+                      <button id="drawCardBtn" class="btn btn-warning">
+                        <i class="fas fa-plus me-1"></i>Húzás
+                      </button>
+                    </div>
+                  </div>
+                  <div id="playerHandArea" class="d-flex flex-wrap justify-content-center">
+                    <!-- Itt jelennek meg a játékos kártyái -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="game-sidebar">
+            <div class="card shadow mb-4">
+              <div class="card-body">
+                <h3 class="card-title mb-3">Játékosok</h3>
+                <div id="gamePlayersList">
+                  <!-- Itt jelennek meg a játékosok -->
+                </div>
+              </div>
+            </div>
+            
+            <div class="card shadow">
+              <div class="card-body">
+                <h3 class="card-title mb-3">Infó</h3>
+                <div id="gameLog" class="game-log">
+                  <!-- Itt jelennek meg a játék eseményei -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Játék vége képernyő -->
+    <div id="game-end-screen" class="d-none text-center">
+      <div class="end-game-box">
+        <h2 class="display-4 mb-4">Játék vége</h2>
+        
+        <div class="card shadow mb-4">
+          <div class="card-body">
+            <h3 class="card-title mb-3">Eredmény</h3>
+            <div id="gameResult" class="mb-4">
+              <!-- Itt jelenik meg a végeredmény -->
+            </div>
+            <button id="backToMenuBtn" class="btn btn-primary btn-lg">
+              <i class="fas fa-home me-2"></i>Vissza a főmenübe
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  
+  <!-- Bootstrap JS és Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Google Apps Script Mock -->
+  <script src="mock-gas.js"></script>
+  
+  <script>
+  // Globális változók
+  let gameId = "";
+  let playerId = "";
+  let playerName = "";
+  let isCreator = false;
+  let gameState = "waiting";
+  let gameInterval = null;
+  let myTurn = false;
+  let myCards = [];
+  let tableCard = null;
+  let players = [];
+  
+  // DOM betöltés után futó kód
+  document.addEventListener('DOMContentLoaded', function() {
+    // Kezdőképernyő eseménykezelők
+    document.getElementById('createGame').addEventListener('click', handleCreateGame);
+    document.getElementById('joinGame').addEventListener('click', handleJoinGame);
+    document.getElementById('showMoreRules').addEventListener('click', showRulesModal);
+    
+    // Várakozó képernyő eseménykezelők
+    document.getElementById('copyGameId').addEventListener('click', copyGameIdToClipboard);
+    document.getElementById('startGameBtn').addEventListener('click', handleStartGame);
+    
+    // Játék képernyő eseménykezelők
+    document.getElementById('drawCardBtn').addEventListener('click', handleDrawCard);
+    
+    // Játék vége képernyő eseménykezelők
+    document.getElementById('backToMenuBtn').addEventListener('click', backToMainMenu);
+    
+    // Név mentése Local Storage-ból, ha van
+    const savedName = localStorage.getItem('opticsCardGamePlayerName');
+    if (savedName) {
+      document.getElementById('playerName').value = savedName;
+    }
+  });
+  
+  // Új játékszoba létrehozása
+  function handleCreateGame() {
+    const playerNameInput = document.getElementById('playerName');
+    playerName = playerNameInput.value.trim();
+    
+    if (!playerName) {
+      showAlert('Kérlek add meg a nevedet!', 'danger');
+      return;
+    }
+    
+    // Játékos név mentése Local Storage-ba
+    localStorage.setItem('opticsCardGamePlayerName', playerName);
+    
+    // Loading állapot mutatása
+    const btn = document.getElementById('createGame');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Létrehozás...';
+    btn.disabled = true;
+    
+    // Játékszoba létrehozása
+    google.script.run
+      .withSuccessHandler(function(result) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        if (result.success) {
+          gameId = result.gameId;
+          playerId = result.playerId;
+          playerName = result.playerName;
+          isCreator = result.isCreator;
+          
+          // Váltás a várakozó képernyőre
+          showWaitingScreen();
+          
+          // Adatok frissítése a várakozó képernyőn
+          document.getElementById('gameIdDisplay').textContent = gameId;
+          
+          // Játék állapot lekérdezésének indítása
+          startGameStatePolling();
+        } else {
+          showAlert(result.error || 'Hiba történt a játék létrehozásakor!', 'danger');
+        }
+      })
+      .withFailureHandler(function(error) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showAlert('Hiba történt: ' + error, 'danger');
+      })
+      .createGameRoom(playerName);
+  }
+  
+  // Csatlakozás játékszobához
+  function handleJoinGame() {
+    const playerNameInput = document.getElementById('playerName');
+    const gameIdInput = document.getElementById('gameIdInput');
+    
+    playerName = playerNameInput.value.trim();
+    const inputGameId = gameIdInput.value.trim().toUpperCase();
+    
+    if (!playerName) {
+      showAlert('Kérlek add meg a nevedet!', 'danger');
+      return;
+    }
+    
+    if (!inputGameId) {
+      showAlert('Kérlek add meg a játékszoba azonosítóját!', 'danger');
+      return;
+    }
+    
+    // Játékos név mentése Local Storage-ba
+    localStorage.setItem('opticsCardGamePlayerName', playerName);
+    
+    // Loading állapot mutatása
+    const btn = document.getElementById('joinGame');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Csatlakozás...';
+    btn.disabled = true;
+    
+    // Csatlakozás a játékszobához
+    google.script.run
+      .withSuccessHandler(function(result) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        if (result.success) {
+          gameId = result.gameId;
+          playerId = result.playerId;
+          playerName = result.playerName;
+          isCreator = result.isCreator;
+          
+          // Váltás a várakozó képernyőre
+          showWaitingScreen();
+          
+          // Adatok frissítése a várakozó képernyőn
+          document.getElementById('gameIdDisplay').textContent = gameId;
+          
+          // Játék állapot lekérdezésének indítása
+          startGameStatePolling();
+        } else {
+          showAlert(result.error || 'Hiba történt a játékhoz csatlakozáskor!', 'danger');
+        }
+      })
+      .withFailureHandler(function(error) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showAlert('Hiba történt: ' + error, 'danger');
+      })
+      .joinGameRoom(inputGameId, playerName);
+  }
+  
+  // Játék indítása
+  function handleStartGame() {
+    // Loading állapot mutatása
+    const btn = document.getElementById('startGameBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Indítás...';
+    btn.disabled = true;
+    
+    // Játék indítása
+    google.script.run
+      .withSuccessHandler(function(result) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        if (!result.success) {
+          showAlert(result.error || 'Hiba történt a játék indításakor!', 'danger');
+        }
+      })
+      .withFailureHandler(function(error) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showAlert('Hiba történt: ' + error, 'danger');
+      })
+      .startGame(gameId, playerId);
+  }
+  
+  // Kártya húzása
+  function handleDrawCard() {
+    if (!myTurn) {
+      showAlert('Nem a te köröd van!', 'warning');
+      return;
+    }
+    
+    // Loading állapot mutatása
+    const btn = document.getElementById('drawCardBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Húzás...';
+    btn.disabled = true;
+    
+    // Kártya húzása
+    google.script.run
+      .withSuccessHandler(function(result) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        if (result.success) {
+          addLogEntry(`Húztál egy kártyát: ${result.drawnCard.text}`);
+        } else {
+          showAlert(result.error || 'Hiba történt a kártya húzásakor!', 'danger');
+        }
+      })
+      .withFailureHandler(function(error) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showAlert('Hiba történt: ' + error, 'danger');
+      })
+      .drawCard(gameId, playerId);
+  }
+  
+  // Kártya kijátszása
+  function handlePlayCard(cardId) {
+    if (!myTurn) {
+      showAlert('Nem a te köröd van!', 'warning');
+      return;
+    }
+    
+    // Kártya kijátszása
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (result.success) {
+          // Ha a játék véget ért
+          if (result.gameEnded) {
+            // A játék véget ért, a nyertes megjelenítése a következő frissítésnél történik
+            addLogEntry('Gratulálunk! Megnyerted a játékot!');
+          } else {
+            addLogEntry(`Kijátszottad: ${result.playedCard.text}`);
+          }
+        } else {
+          showAlert(result.error || 'Hiba történt a kártya kijátszásakor!', 'danger');
+        }
+      })
+      .withFailureHandler(function(error) {
+        showAlert('Hiba történt: ' + error, 'danger');
+      })
+      .playCard(gameId, playerId, cardId);
+  }
+  
+  // Játék állapot lekérdezésének indítása
+  function startGameStatePolling() {
+    // Az előző interval törlése, ha volt
+    if (gameInterval) {
+      clearInterval(gameInterval);
+    }
+    
+    // Azonnal lekérdezzük az állapotot
+    updateGameState();
+    
+    // Állapot lekérdezése 2 másodpercenként
+    gameInterval = setInterval(updateGameState, 2000);
+  }
+  
+  // Játék állapot frissítése
+  function updateGameState() {
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (result.success) {
+          // Játék állapot és adatok frissítése
+          gameState = result.gameState;
+          players = result.players;
+          myTurn = result.isMyTurn;
+          
+          // Játékosok listájának frissítése
+          updatePlayersList(result);
+          
+          // Játékállapotnak megfelelő képernyő megjelenítése
+          if (gameState === 'waiting') {
+            showWaitingScreen();
+          } else if (gameState === 'playing') {
+            myCards = result.playerCards;
+            tableCard = result.tableCard;
+            showGameScreen();
+            updateGameScreen(result);
+          } else if (gameState === 'ended') {
+            showGameEndScreen(result);
+            // Állítsuk le a lekérdezést, ha a játék véget ért
+            clearInterval(gameInterval);
+          }
+        } else {
+          showAlert(result.error || 'Hiba történt a játék állapotának lekérdezésekor!', 'danger');
+        }
+      })
+      .withFailureHandler(function(error) {
+        showAlert('Hiba történt: ' + error, 'danger');
+      })
+      .getGameState(gameId, playerId);
+  }
+  
+  // Játékosok listájának frissítése
+  function updatePlayersList(result) {
+    const waitingPlayersList = document.getElementById('playersList');
+    const gamePlayersList = document.getElementById('gamePlayersList');
+    
+    if (gameState === 'waiting') {
+      // Várakozó képernyő játékos lista
+      waitingPlayersList.innerHTML = '';
+      
+      // Játékosok listájának megjelenítése
+      players.forEach(player => {
+        const playerItem = document.createElement('div');
+        playerItem.className = 'player-item' + (player.isCreator ? ' creator' : '');
+        
+        let playerHTML = `
+          <div class="player-name">
+            <i class="fas fa-user me-2"></i>${player.name}
+            ${player.isCreator ? '<span class="player-badge">Szoba létrehozója</span>' : ''}
+          </div>
+        `;
+        
+        playerItem.innerHTML = playerHTML;
+        waitingPlayersList.appendChild(playerItem);
+      });
+      
+      // Szoba létrehozója csak az indítás gombot láthatja
+      const creatorControls = document.getElementById('creatorControls');
+      if (isCreator) {
+        creatorControls.classList.remove('d-none');
+        
+        // Start gomb engedélyezése/tiltása a játékosok számától függően
+        const startGameBtn = document.getElementById('startGameBtn');
+        startGameBtn.disabled = players.length < 2;
+        if (players.length < 2) {
+          startGameBtn.title = 'Legalább 2 játékos szükséges a játék indításához';
+        } else {
+          startGameBtn.title = 'Játék indítása';
+        }
+      } else {
+        creatorControls.classList.add('d-none');
+      }
+    } else {
+      // Játék képernyő játékos lista
+      gamePlayersList.innerHTML = '';
+      
+      // Aktuális játékos lekérése
+      const currentPlayer = players.find(p => p.id === result.currentPlayerId);
+      const currentPlayerName = currentPlayer ? currentPlayer.name : 'Ismeretlen';
+      
+      // Játékosok listájának megjelenítése
+      players.forEach(player => {
+        const playerItem = document.createElement('div');
+        playerItem.className = 'player-item' + 
+                              (player.isCreator ? ' creator' : '') + 
+                              (player.id === result.currentPlayerId ? ' current' : '');
+        
+        let playerHTML = `
+          <div class="player-name">
+            <i class="fas ${player.id === playerId ? 'fa-user-circle' : 'fa-user'} me-2"></i>${player.name}
+            ${player.isCreator ? '<span class="player-badge">Szoba</span>' : ''}
+            ${player.id === result.currentPlayerId ? '<span class="player-badge bg-success">Soron következő</span>' : ''}
+            ${player.id === playerId ? '<span class="player-badge bg-info">Te</span>' : ''}
+          </div>
+          <div class="player-cards-count">
+            <span class="badge bg-secondary">${player.cardsCount} kártya</span>
+          </div>
+        `;
+        
+        playerItem.innerHTML = playerHTML;
+        gamePlayersList.appendChild(playerItem);
+      });
+      
+      // Aktuális játékos nevének megjelenítése
+      document.getElementById('currentPlayerName').textContent = currentPlayerName;
+    }
+  }
+  
+  // Játék képernyő frissítése
+  function updateGameScreen(result) {
+    // Játék azonosító megjelenítése
+    document.getElementById('gameIdGame').textContent = gameId;
+    
+    // Asztalon lévő kártya megjelenítése
+    const tableCardArea = document.getElementById('tableCardArea');
+    tableCardArea.innerHTML = '';
+    
+    if (tableCard) {
+      const cardElement = createCardElement(tableCard, false);
+      tableCardArea.appendChild(cardElement);
+    } else {
+      tableCardArea.innerHTML = `
+        <div class="card-placeholder">
+          <div class="text-center text-muted">
+            <i class="fas fa-table fa-3x mb-2"></i>
+            <p>Még nincs kártya az asztalon</p>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Játékos kártyáinak megjelenítése
+    const playerHandArea = document.getElementById('playerHandArea');
+    playerHandArea.innerHTML = '';
+    
+    if (myCards.length === 0) {
+      playerHandArea.innerHTML = `
+        <div class="card-placeholder">
+          <div class="text-center text-muted">
+            <i class="fas fa-hand-paper fa-3x mb-2"></i>
+            <p>Nincs kártyád</p>
+          </div>
+        </div>
+      `;
+    } else {
+      myCards.forEach(card => {
+        // Ellenőrizzük, hogy a kártya kijátszható-e
+        const isPlayable = myTurn && canPlayCard(card, tableCard);
+        
+        const cardElement = createCardElement(card, isPlayable);
+        cardElement.addEventListener('click', function() {
+          if (isPlayable) {
+            handlePlayCard(card.id);
+          } else if (!myTurn) {
+            showAlert('Nem a te köröd van!', 'warning');
+          } else {
+            showAlert('Ez a kártya nem játszható ki!', 'warning');
+          }
+        });
+        playerHandArea.appendChild(cardElement);
+      });
+    }
+    
+    // Húzás gomb engedélyezése/tiltása
+    document.getElementById('drawCardBtn').disabled = !myTurn;
+  }
+  
+  // Kártya elem létrehozása
+  function createCardElement(card, isPlayable) {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = `game-card card-${card.color} ${isPlayable ? 'playable' : ''} ${!isPlayable && myTurn ? 'disabled' : ''}`;
+    
+    cardDiv.innerHTML = `
+      <div class="card-header">
+        <span class="card-type">${getCardTypeName(card.type)}</span>
+        <span class="card-icon">${getCardIcon(card.type)}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${card.text}</div>
+        <div class="card-description">${card.description}</div>
+        <div class="card-property">${card.property || ''}</div>
+      </div>
+    `;
+    
+    return cardDiv;
+  }
+  
+  // Kártyatípus nevének lekérése
+  function getCardTypeName(type) {
+    const types = {
+      concept: 'Fogalom',
+      law: 'Törvény',
+      object: 'Tárgy',
+      device: 'Eszköz',
+      application: 'Alkalmazás',
+      example: 'Példa',
+      value: 'Érték',
+      joker: 'Joker'
+    };
+    
+    return types[type] || 'Ismeretlen';
+  }
+  
+  // Kártya ikon lekérése
+  function getCardIcon(type) {
+    const icons = {
+      concept: '💭',
+      law: '⚖️',
+      object: '🔍',
+      device: '📱',
+      application: '💡',
+      example: '✨',
+      value: '📊',
+      joker: '🃏'
+    };
+    
+    return icons[type] || '❓';
+  }
+  
+  // Ellenőrzi, hogy a kártya kijátszható-e
+  function canPlayCard(card, tableCard) {
+    // Ha nincs asztalon kártya, bármit le lehet tenni
+    if (!tableCard) return true;
+    
+    // Ugyanolyan típusú kártyát mindig le lehet tenni
+    if (card.type === tableCard.type) return true;
+    
+    // Ugyanolyan színű kártyát mindig le lehet tenni
+    if (card.color === tableCard.color) return true;
+    
+    // Egyező tulajdonságú kártyákat is le lehet tenni
+    if (card.property && tableCard.property && card.property === tableCard.property) return true;
+    
+    // Joker kártyát mindig le lehet tenni
+    if (card.type === 'joker') return true;
+    
+    return false;
+  }
+  
+  // Játékszoba azonosító másolása a vágólapra
+  function copyGameIdToClipboard() {
+    const gameIdDisplay = document.getElementById('gameIdDisplay');
+    const gameId = gameIdDisplay.textContent;
+    
+    // Clipboard API használata
+    navigator.clipboard.writeText(gameId).then(function() {
+      showAlert('Játékszoba azonosító másolva a vágólapra!', 'success');
+    }, function() {
+      showAlert('Nem sikerült másolni a vágólapra!', 'danger');
+    });
+  }
+  
+  // Részletes szabályok megjelenítése
+  function showRulesModal() {
+    const myModal = new bootstrap.Modal(document.getElementById('rulesModal'));
+    myModal.show();
+  }
+  
+  // Értesítés megjelenítése
+  function showAlert(message, type = 'info') {
+    // Toast elem létrehozása
+    const toastContainer = document.createElement('div');
+    toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+    toastContainer.style.zIndex = '5';
+    
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    const toastContent = document.createElement('div');
+    toastContent.className = 'd-flex';
+    
+    const toastBody = document.createElement('div');
+    toastBody.className = 'toast-body';
+    toastBody.textContent = message;
+    
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close btn-close-white me-2 m-auto';
+    closeButton.setAttribute('data-bs-dismiss', 'toast');
+    closeButton.setAttribute('aria-label', 'Bezárás');
+    
+    toastContent.appendChild(toastBody);
+    toastContent.appendChild(closeButton);
+    toast.appendChild(toastContent);
+    toastContainer.appendChild(toast);
+    
+    document.body.appendChild(toastContainer);
+    
+    // Toast megjelenítése
+    const bsToast = new bootstrap.Toast(toast, {
+      autohide: true,
+      delay: 3000
+    });
+    bsToast.show();
+    
+    // Toast eltávolítása, miután elrejtődött
+    toast.addEventListener('hidden.bs.toast', function() {
+      document.body.removeChild(toastContainer);
+    });
+  }
+  
+  // Játék log bejegyzés hozzáadása
+  function addLogEntry(message) {
+    const gameLog = document.getElementById('gameLog');
+    const now = new Date();
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    
+    const logEntry = document.createElement('div');
+    logEntry.className = 'log-entry';
+    logEntry.innerHTML = `<span class="log-time">${timeStr}</span> ${message}`;
+    
+    gameLog.appendChild(logEntry);
+    gameLog.scrollTop = gameLog.scrollHeight; // Scroll to bottom
+  }
+  
+  // Játék vége képernyő megjelenítése
+  function showGameEndScreen(result) {
+    hideAllScreens();
+    document.getElementById('game-end-screen').classList.remove('d-none');
+    
+    const gameResult = document.getElementById('gameResult');
+    const winner = players.find(p => p.id === result.winner);
+    
+    if (winner) {
+      gameResult.innerHTML = `
+        <div class="winner-display">
+          <i class="fas fa-trophy me-2 text-warning"></i>
+          Nyertes: ${winner.name}
+        </div>
+      `;
+    } else {
+      gameResult.innerHTML = `
+        <div class="alert alert-info">
+          A játék véget ért.
+        </div>
+      `;
+    }
+  }
+  
+  // Vissza a főmenübe
+  function backToMainMenu() {
+    // Játék állapot törlése
+    gameId = "";
+    playerId = "";
+    isCreator = false;
+    gameState = "waiting";
+    if (gameInterval) {
+      clearInterval(gameInterval);
+      gameInterval = null;
+    }
+    myTurn = false;
+    myCards = [];
+    tableCard = null;
+    players = [];
+    
+    // Képernyők visszaállítása
+    hideAllScreens();
+    document.getElementById('welcome-screen').classList.remove('d-none');
+  }
+  
+  // Várakozó képernyő megjelenítése
+  function showWaitingScreen() {
+    hideAllScreens();
+    document.getElementById('waiting-screen').classList.remove('d-none');
+  }
+  
+  // Játék képernyő megjelenítése
+  function showGameScreen() {
+    hideAllScreens();
+    document.getElementById('game-screen').classList.remove('d-none');
+  }
+  
+  // Minden képernyő elrejtése
+  function hideAllScreens() {
+    document.getElementById('welcome-screen').classList.add('d-none');
+    document.getElementById('waiting-screen').classList.add('d-none');
+    document.getElementById('game-screen').classList.add('d-none');
+    document.getElementById('game-end-screen').classList.add('d-none');
+  }
+  </script>
+</body>
+</html>
