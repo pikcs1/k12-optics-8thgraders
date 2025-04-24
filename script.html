@@ -178,17 +178,33 @@
       return;
     }
     
+    // Jelezzük a felhasználónak, hogy folyamatban van a kártya húzása
+    showAlert('Kártya húzása folyamatban...', 'info');
+    
     // Loading állapot mutatása
     const btn = document.getElementById('drawCardBtn');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Húzás...';
     btn.disabled = true;
     
+    // Kártyáim letiltása a húzás idejére
+    const cardElements = document.querySelectorAll('#playerHandArea .game-card');
+    cardElements.forEach(card => {
+      card.style.opacity = '0.7';
+      card.style.pointerEvents = 'none';
+    });
+    
     // Kártya húzása
     google.script.run
       .withSuccessHandler(function(result) {
+        // Visszaállítjuk a gomb és kártyák megjelenését
         btn.innerHTML = originalText;
         btn.disabled = false;
+        
+        cardElements.forEach(card => {
+          card.style.opacity = '';
+          card.style.pointerEvents = '';
+        });
         
         if (result.success) {
           addLogEntry(`Húztál egy kártyát: ${result.drawnCard.text}`);
@@ -197,8 +213,15 @@
         }
       })
       .withFailureHandler(function(error) {
+        // Visszaállítjuk a gomb és kártyák megjelenését
         btn.innerHTML = originalText;
         btn.disabled = false;
+        
+        cardElements.forEach(card => {
+          card.style.opacity = '';
+          card.style.pointerEvents = '';
+        });
+        
         showAlert('Hiba történt: ' + error, 'danger');
       })
       .drawCard(gameId, playerId);
@@ -211,9 +234,41 @@
       return;
     }
     
+    // Megkeressük a kártya elemet, hogy vizuálisan jelezzük a kattintást
+    const card = myCards.find(c => c.id === cardId);
+    const cardElements = document.querySelectorAll('#playerHandArea .game-card');
+    let clickedCardElement = null;
+    
+    // Megtaláljuk a kattintott kártya DOM elemét
+    cardElements.forEach(element => {
+      if (element.querySelector('.card-title').textContent === card.text) {
+        clickedCardElement = element;
+      }
+    });
+    
+    // Vizuális visszajelzés a kártyára kattintáskor
+    if (clickedCardElement) {
+      // Hozzáadunk egy "playing" osztályt és letiltjuk a kártyát
+      clickedCardElement.classList.add('playing');
+      clickedCardElement.style.opacity = '0.7';
+      clickedCardElement.style.transform = 'scale(0.95)';
+      clickedCardElement.style.pointerEvents = 'none';
+      
+      // Jelezzük a felhasználónak, hogy folyamatban van a kártya kijátszása
+      showAlert('Kártya kijátszása folyamatban...', 'info');
+    }
+    
     // Kártya kijátszása
     google.script.run
       .withSuccessHandler(function(result) {
+        // Visszaállítjuk a kártya megjelenését, ha még látható
+        if (clickedCardElement) {
+          clickedCardElement.classList.remove('playing');
+          clickedCardElement.style.opacity = '';
+          clickedCardElement.style.transform = '';
+          clickedCardElement.style.pointerEvents = '';
+        }
+        
         if (result.success) {
           // Ha a játék véget ért
           if (result.gameEnded) {
@@ -227,6 +282,14 @@
         }
       })
       .withFailureHandler(function(error) {
+        // Visszaállítjuk a kártya megjelenését, ha még látható
+        if (clickedCardElement) {
+          clickedCardElement.classList.remove('playing');
+          clickedCardElement.style.opacity = '';
+          clickedCardElement.style.transform = '';
+          clickedCardElement.style.pointerEvents = '';
+        }
+        
         showAlert('Hiba történt: ' + error, 'danger');
       })
       .playCard(gameId, playerId, cardId);
