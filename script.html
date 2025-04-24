@@ -257,7 +257,7 @@
           myTurn = result.isMyTurn;
           
           // Játékosok listájának frissítése
-          updatePlayersList();
+          updatePlayersList(result.currentPlayerId);
           
           // Játékállapotnak megfelelő képernyő megjelenítése
           if (gameState === 'waiting') {
@@ -283,7 +283,7 @@
   }
   
   // Játékosok listájának frissítése
-  function updatePlayersList() {
+  function updatePlayersList(currentPlayerId) {
     const waitingPlayersList = document.getElementById('playersList');
     const gamePlayersList = document.getElementById('gamePlayersList');
     
@@ -323,12 +323,12 @@
       } else {
         creatorControls.classList.add('d-none');
       }
-    } else {
+    } else if (gamePlayersList) {
       // Játék képernyő játékos lista
       gamePlayersList.innerHTML = '';
       
       // Aktuális játékos lekérése
-      const currentPlayer = players.find(p => p.id === result.currentPlayerId);
+      const currentPlayer = currentPlayerId ? players.find(p => p.id === currentPlayerId) : null;
       const currentPlayerName = currentPlayer ? currentPlayer.name : 'Ismeretlen';
       
       // Játékosok listájának megjelenítése
@@ -336,13 +336,13 @@
         const playerItem = document.createElement('div');
         playerItem.className = 'player-item' + 
                               (player.isCreator ? ' creator' : '') + 
-                              (player.id === result.currentPlayerId ? ' current' : '');
+                              (player.id === currentPlayerId ? ' current' : '');
         
         let playerHTML = `
           <div class="player-name">
             <i class="fas ${player.id === playerId ? 'fa-user-circle' : 'fa-user'} me-2"></i>${player.name}
             ${player.isCreator ? '<span class="player-badge">Szoba</span>' : ''}
-            ${player.id === result.currentPlayerId ? '<span class="player-badge bg-success">Soron következő</span>' : ''}
+            ${player.id === currentPlayerId ? '<span class="player-badge bg-success">Soron következő</span>' : ''}
             ${player.id === playerId ? '<span class="player-badge bg-info">Te</span>' : ''}
           </div>
           <div class="player-cards-count">
@@ -416,6 +416,14 @@
     
     // Húzás gomb engedélyezése/tiltása
     document.getElementById('drawCardBtn').disabled = !myTurn;
+    
+    // Debug: ellenőrizzük a játék állapotát
+    console.log("Játék állapot frissítve:", {
+      isCreator: isCreator,
+      gameState: gameState,
+      players: players.length,
+      myTurn: myTurn
+    });
   }
   
   // Kártya elem létrehozása
