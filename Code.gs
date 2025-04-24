@@ -247,6 +247,41 @@ function getGameState(gameId, playerId) {
     const gameState = getGameStatus(gameId);
     const tableCard = getTableCard(gameId);
     
+    // Ha a játék véget ért, akkor a nyertes nevét is elküldjük
+    let winnerName = null;
+    if (gameState === 'ended') {
+      const winner = gameData.winner;
+      
+      // Próbáljuk megtalálni a nyertes nevét
+      try {
+        // Először keressük a játékosok között
+        const winnerPlayer = players.find(p => p.id === winner);
+        if (winnerPlayer) {
+          winnerName = winnerPlayer.name;
+        } 
+        // Ha nem találjuk meg a jelenlegi játékosok között, próbáljuk más módon
+        else {
+          // Lehet, hogy a nyertes már kilépett, ezért külön is ellenőrizzük
+          const ss = initializeDatabase();
+          if (ss) {
+            const playersSheet = ss.getSheetByName('játékosok');
+            if (playersSheet) {
+              const data = playersSheet.getDataRange().getValues();
+              for (let i = 1; i < data.length; i++) {
+                // Ha megtaláljuk a nyertes játékost (lehet, hogy más játékban van már)
+                if (data[i][1] === winner) {
+                  winnerName = data[i][2]; // játékos neve
+                  break;
+                }
+              }
+            }
+          }
+        }
+      } catch (nameError) {
+        Logger.log('Hiba a nyertes nevének lekérésekor: ' + nameError.toString());
+      }
+    }
+    
     return {
       success: true,
       gameState: gameState,
@@ -254,7 +289,9 @@ function getGameState(gameId, playerId) {
       currentPlayerId: currentPlayerId,
       playerCards: playerCards,
       tableCard: tableCard,
-      isMyTurn: currentPlayerId === playerId
+      isMyTurn: currentPlayerId === playerId,
+      winner: gameData.winner,
+      winnerName: winnerName
     };
   } catch (e) {
     console.error('Hiba a játék állapotának lekérdezésekor:', e);
@@ -315,10 +352,24 @@ function playCard(gameId, playerId, cardId) {
       setGameWinner(gameId, playerId);
       setGameState(gameId, 'ended');
       
+      // A nyertes nevének lekérése
+      let winnerName = playerName;
+      
+      try {
+        const players = getPlayers(gameId);
+        const winnerPlayer = players.find(player => player.id === playerId);
+        if (winnerPlayer) {
+          winnerName = winnerPlayer.name;
+        }
+      } catch (nameError) {
+        Logger.log('Hiba a nyertes nevének lekérésekor: ' + nameError.toString());
+      }
+      
       return {
         success: true,
         gameEnded: true,
-        winner: playerId
+        winner: playerId,
+        winnerName: winnerName
       };
     }
     
