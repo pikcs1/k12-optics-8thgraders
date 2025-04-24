@@ -7,34 +7,66 @@
  * Adatbázis (Google Táblázat) inicializálása
  */
 function initializeDatabase() {
-  if (!SPREADSHEET_ID || SPREADSHEET_ID === '') {
-    // Ha még nincs táblázat létrehozva, létrehozunk egy újat
-    const ss = SpreadsheetApp.create('Optikai Kártyajáték Adatbázis');
-    const ssId = ss.getId();
+  try {
+    // Globális változó ellenőrzése
+    let spreadsheetId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
     
-    // Tároljuk az azonosítót a szkript tulajdonságokban
-    PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', ssId);
-    
-    // Létrehozzuk a szükséges munkalapokat
-    createSheets(ss);
-    
-    return ss;
-  } else {
-    // Használjuk a meglévő táblázatot
-    try {
-      const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-      return ss;
-    } catch (e) {
-      // Ha a táblázat már nem létezik, létrehozunk egy újat
+    if (!spreadsheetId || spreadsheetId === '') {
+      // Ha még nincs táblázat létrehozva, létrehozunk egy újat
+      Logger.log('Nincs táblázat azonosító, új táblázat létrehozása...');
       const ss = SpreadsheetApp.create('Optikai Kártyajáték Adatbázis');
-      const ssId = ss.getId();
+      spreadsheetId = ss.getId();
       
-      PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', ssId);
+      // Tároljuk az azonosítót a szkript tulajdonságokban
+      PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', spreadsheetId);
       
+      // Létrehozzuk a szükséges munkalapokat
       createSheets(ss);
       
+      Logger.log('Új táblázat létrehozva: ' + spreadsheetId);
       return ss;
+    } else {
+      // Használjuk a meglévő táblázatot
+      try {
+        Logger.log('Meglévő táblázat megnyitása: ' + spreadsheetId);
+        const ss = SpreadsheetApp.openById(spreadsheetId);
+        
+        // Ellenőrizzük, hogy megvannak-e a szükséges munkalapok
+        let needsSheets = false;
+        const sheetNames = ['játékok', 'játékosok', 'kártyák'];
+        
+        for (const name of sheetNames) {
+          if (!ss.getSheetByName(name)) {
+            needsSheets = true;
+            Logger.log('Hiányzó munkalap: ' + name);
+            break;
+          }
+        }
+        
+        // Ha hiányoznak a munkalapok, létrehozzuk őket
+        if (needsSheets) {
+          Logger.log('Hiányzó munkalapok létrehozása...');
+          createSheets(ss);
+        }
+        
+        return ss;
+      } catch (e) {
+        // Ha a táblázat már nem létezik, létrehozunk egy újat
+        Logger.log('Táblázat nem található, új táblázat létrehozása...');
+        const ss = SpreadsheetApp.create('Optikai Kártyajáték Adatbázis');
+        const newSpreadsheetId = ss.getId();
+        
+        PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', newSpreadsheetId);
+        
+        createSheets(ss);
+        
+        Logger.log('Új táblázat létrehozva: ' + newSpreadsheetId);
+        return ss;
+      }
     }
+  } catch (e) {
+    Logger.log('Hiba az adatbázis inicializálása során: ' + e.toString());
+    throw new Error('Adatbázis inicializálási hiba: ' + e.toString());
   }
 }
 
@@ -42,65 +74,103 @@ function initializeDatabase() {
  * Munkalapok létrehozása
  */
 function createSheets(ss) {
-  // Létrehozzuk a szükséges munkalapokat
-  ss.insertSheet('játékok');
-  ss.insertSheet('játékosok');
-  ss.insertSheet('kártyák');
-  
-  // Az alapértelmezett munkalapot átnevezzük biztonsági mentésnek
-  const sheets = ss.getSheets();
-  for (let i = 0; i < sheets.length; i++) {
-    if (sheets[i].getName() === "Sheet1" || sheets[i].getName() === "Munkalap1") {
-      sheets[i].setName("tartalék");
-      break;
+  try {
+    // Létrehozzuk a szükséges munkalapokat és a változókat egyből tároljuk
+    let gamesSheet = ss.insertSheet('játékok');
+    let playersSheet = ss.insertSheet('játékosok');
+    let cardsSheet = ss.insertSheet('kártyák');
+    
+    // Az alapértelmezett munkalapot átnevezzük biztonsági mentésnek
+    const sheets = ss.getSheets();
+    for (let i = 0; i < sheets.length; i++) {
+      if (sheets[i].getName() === "Sheet1" || sheets[i].getName() === "Munkalap1") {
+        sheets[i].setName("tartalék");
+        break;
+      }
     }
+    
+    // Biztonsági ellenőrzés: ha valamelyik lap null lenne, keressük meg újra
+    if (!gamesSheet) gamesSheet = ss.getSheetByName('játékok');
+    if (!playersSheet) playersSheet = ss.getSheetByName('játékosok');
+    if (!cardsSheet) cardsSheet = ss.getSheetByName('kártyák');
+    
+    // Beállítjuk a fejléceket - extra ellenőrzéssel
+    if (gamesSheet) {
+      gamesSheet.appendRow(['játékId', 'állapot', 'aktuálisJátékos', 'nyertes', 'asztalLap', 'létrehozva']);
+    } else {
+      Logger.log('Nem sikerült létrehozni a játékok munkalapot');
+    }
+    
+    if (playersSheet) {
+      playersSheet.appendRow(['játékId', 'játékosId', 'játékosNév', 'készítő', 'kártyák']);
+    } else {
+      Logger.log('Nem sikerült létrehozni a játékosok munkalapot');
+    }
+    
+    if (cardsSheet) {
+      cardsSheet.appendRow(['játékId', 'pakli']);
+    } else {
+      Logger.log('Nem sikerült létrehozni a kártyák munkalapot');
+    }
+  } catch (e) {
+    Logger.log('Hiba a munkalapok létrehozása során: ' + e.toString());
+    throw e;
   }
-  
-  // Beállítjuk a fejléceket
-  const gamesSheet = ss.getSheetByName('játékok');
-  gamesSheet.appendRow(['játékId', 'állapot', 'aktuálisJátékos', 'nyertes', 'asztalLap', 'létrehozva']);
-  
-  const playersSheet = ss.getSheetByName('játékosok');
-  playersSheet.appendRow(['játékId', 'játékosId', 'játékosNév', 'készítő', 'kártyák']);
-  
-  const cardsSheet = ss.getSheetByName('kártyák');
-  cardsSheet.appendRow(['játékId', 'pakli']);
 }
 
 /**
  * Játékszoba inicializálása
  */
 function initializeGameRoom(gameId, creatorName, creatorId) {
-  const ss = initializeDatabase();
-  
-  // Játék létrehozása
-  const gamesSheet = ss.getSheetByName('játékok');
-  gamesSheet.appendRow([
-    gameId,
-    'waiting',  // állapot: várakozás, playing, ended
-    '',         // aktuálisJátékos
-    '',         // nyertes
-    '',         // asztalLap
-    new Date()  // létrehozva
-  ]);
-  
-  // Játékos hozzáadása
-  const playersSheet = ss.getSheetByName('játékosok');
-  playersSheet.appendRow([
-    gameId,
-    creatorId,
-    creatorName,
-    true,       // készítő: true/false
-    JSON.stringify([])  // kezdetben üres kártyahalmaz
-  ]);
-  
-  // Pakli inicializálása
-  const cardsSheet = ss.getSheetByName('kártyák');
-  const deck = createShuffledDeck();
-  cardsSheet.appendRow([
-    gameId,
-    JSON.stringify(deck)
-  ]);
+  try {
+    const ss = initializeDatabase();
+    
+    // Játék létrehozása
+    const gamesSheet = ss.getSheetByName('játékok');
+    if (!gamesSheet) {
+      throw new Error('A játékok munkalap nem található. Kérjük, ellenőrizze, hogy létezik-e.');
+    }
+    
+    gamesSheet.appendRow([
+      gameId,
+      'waiting',  // állapot: várakozás, playing, ended
+      '',         // aktuálisJátékos
+      '',         // nyertes
+      '',         // asztalLap
+      new Date()  // létrehozva
+    ]);
+    
+    // Játékos hozzáadása
+    const playersSheet = ss.getSheetByName('játékosok');
+    if (!playersSheet) {
+      throw new Error('A játékosok munkalap nem található. Kérjük, ellenőrizze, hogy létezik-e.');
+    }
+    
+    playersSheet.appendRow([
+      gameId,
+      creatorId,
+      creatorName,
+      true,       // készítő: true/false
+      JSON.stringify([])  // kezdetben üres kártyahalmaz
+    ]);
+    
+    // Pakli inicializálása
+    const cardsSheet = ss.getSheetByName('kártyák');
+    if (!cardsSheet) {
+      throw new Error('A kártyák munkalap nem található. Kérjük, ellenőrizze, hogy létezik-e.');
+    }
+    
+    const deck = createShuffledDeck();
+    cardsSheet.appendRow([
+      gameId,
+      JSON.stringify(deck)
+    ]);
+    
+    return true;
+  } catch (e) {
+    Logger.log('Hiba a játékszoba inicializálása során: ' + e.toString());
+    throw e;
+  }
 }
 
 /**
