@@ -27,7 +27,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -m http.server 5000 --bind 0.0.0.0"
+args = "python -m http.server 5000 --bind 0.0.0.0 --directory ."
 waitForPort = 5000
 
 [deployment]
