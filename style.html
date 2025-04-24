@@ -1,0 +1,315 @@
+<style>
+  /* Alap stílusok */
+  body {
+    font-family: 'Quicksand', sans-serif;
+    background-color: #f5f7fa;
+    color: #333;
+    min-height: 100vh;
+  }
+  
+  .container {
+    max-width: 1200px;
+  }
+  
+  /* Kezdőképernyő */
+  .welcome-box {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #6c757d;
+  }
+  
+  .separator::before,
+  .separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .separator::before {
+    margin-right: 1em;
+  }
+  
+  .separator::after {
+    margin-left: 1em;
+  }
+  
+  /* Várakozó képernyő */
+  .waiting-box {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .game-id-display {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  /* Játékos lista */
+  .player-item {
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    background: #f8f9fa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .player-item.creator {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+  }
+  
+  .player-item.current {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+  }
+  
+  .player-badge {
+    font-size: 0.8em;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: #2196f3;
+    color: white;
+    margin-left: 5px;
+  }
+  
+  /* Kártyák stílusa */
+  .game-card {
+    width: 140px;
+    height: 200px;
+    margin: 10px;
+    border-radius: 10px;
+    border: 2px solid;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+    user-select: none;
+  }
+  
+  .game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .game-card.disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .game-card.playable {
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+  }
+  
+  .card-header {
+    padding: 8px;
+    border-bottom: 1px solid;
+    border-color: inherit;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .card-body {
+    padding: 10px;
+    position: relative;
+    height: calc(100% - 40px);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .card-type {
+    font-size: 0.8em;
+    padding: 2px 5px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.5);
+  }
+  
+  .card-icon {
+    font-size: 1.2em;
+  }
+  
+  .card-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-align: center;
+  }
+  
+  .card-description {
+    font-size: 0.9em;
+    text-align: center;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .card-property {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 0.7em;
+    opacity: 0.7;
+  }
+  
+  /* Kártya színek */
+  .card-blue {
+    background-color: #E3F2FD;
+    border-color: #2196F3;
+    color: #0D47A1;
+  }
+  
+  .card-red {
+    background-color: #FFEBEE;
+    border-color: #F44336;
+    color: #B71C1C;
+  }
+  
+  .card-green {
+    background-color: #E8F5E9;
+    border-color: #4CAF50;
+    color: #1B5E20;
+  }
+  
+  .card-yellow {
+    background-color: #FFFDE7;
+    border-color: #FFEB3B;
+    color: #F57F17;
+  }
+  
+  .card-purple {
+    background-color: #F3E5F5;
+    border-color: #9C27B0;
+    color: #4A148C;
+  }
+  
+  .card-orange {
+    background-color: #FFF3E0;
+    border-color: #FF9800;
+    color: #E65100;
+  }
+  
+  .card-black {
+    background-color: #EEEEEE;
+    border-color: #212121;
+    color: #212121;
+  }
+  
+  /* Kártya placeholder */
+  .card-placeholder {
+    width: 140px;
+    height: 200px;
+    margin: 10px;
+    border-radius: 10px;
+    border: 2px dashed #dee2e6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #6c757d;
+    background: #f8f9fa;
+  }
+  
+  /* Játék log */
+  .game-log {
+    max-height: 300px;
+    overflow-y: auto;
+    font-size: 0.9em;
+  }
+  
+  .log-entry {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .log-entry:last-child {
+    border-bottom: none;
+  }
+  
+  .log-time {
+    color: #6c757d;
+    font-size: 0.8em;
+    margin-right: 5px;
+  }
+  
+  /* Játék vége képernyő */
+  .end-game-box {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .winner-display {
+    font-size: 1.5em;
+    font-weight: bold;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 10px;
+    background: #e8f5e9;
+    border: 1px solid #4caf50;
+    color: #1b5e20;
+  }
+  
+  /* Reszponzív beállítások */
+  @media (max-width: 768px) {
+    .game-card {
+      width: 120px;
+      height: 170px;
+      margin: 5px;
+    }
+    
+    .card-placeholder {
+      width: 120px;
+      height: 170px;
+    }
+    
+    .card-description {
+      font-size: 0.8em;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .game-card {
+      width: 100px;
+      height: 150px;
+      margin: 3px;
+    }
+    
+    .card-placeholder {
+      width: 100px;
+      height: 150px;
+    }
+    
+    .card-type, .card-property {
+      font-size: 0.7em;
+    }
+    
+    .card-description {
+      font-size: 0.7em;
+    }
+    
+    .card-icon {
+      font-size: 1em;
+    }
+  }
+</style>
