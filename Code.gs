@@ -108,15 +108,16 @@ function createGameRoom(playerName, selectedCardSets) {
     
     // Próbáljuk meg létrehozni a játékszobát
     try {
-      const result = initializeGameRoom(gameId, playerName, playerId);
-      Logger.log('Játékszoba sikeresen létrehozva: ' + gameId);
+      const result = initializeGameRoom(gameId, playerName, playerId, selectedCardSets);
+      Logger.log('Játékszoba sikeresen létrehozva: ' + gameId + ' kártyakészletekkel: ' + JSON.stringify(selectedCardSets));
       
       return {
         success: true,
         gameId: gameId,
         playerId: playerId,
         playerName: playerName,
-        isCreator: true
+        isCreator: true,
+        selectedCardSets: selectedCardSets
       };
     } catch (e) {
       Logger.log('Hiba a játékszoba létrehozásakor: ' + e.toString());
@@ -127,15 +128,16 @@ function createGameRoom(playerName, selectedCardSets) {
         const ss = initializeDatabase();
         
         // Még egyszer próbáljuk meg létrehozni a játékszobát
-        initializeGameRoom(gameId, playerName, playerId);
+        initializeGameRoom(gameId, playerName, playerId, selectedCardSets);
         
-        Logger.log('Játékszoba sikeresen létrehozva a második próbálkozásra: ' + gameId);
+        Logger.log('Játékszoba sikeresen létrehozva a második próbálkozásra: ' + gameId + ' kártyakészletekkel: ' + JSON.stringify(selectedCardSets));
         return {
           success: true,
           gameId: gameId,
           playerId: playerId,
           playerName: playerName,
-          isCreator: true
+          isCreator: true,
+          selectedCardSets: selectedCardSets
         };
       } catch (retryError) {
         Logger.log('Hiba a játékszoba létrehozásakor a második próbálkozásra: ' + retryError.toString());
