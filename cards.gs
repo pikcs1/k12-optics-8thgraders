@@ -4,6 +4,410 @@
  */
 
 /**
+ * Elérhető kártyapaklik
+ */
+const CARD_DECKS = {
+  optics: {
+    id: 'optics',
+    name: 'Optika',
+    description: '8. osztályos optika alapfogalmak',
+    createFunction: createOpticsDeck
+  },
+  electricity: {
+    id: 'electricity',
+    name: 'Elektromosság',
+    description: '8. osztályos elektromosság alapfogalmak',
+    createFunction: letrehozElektromossagPakli
+  },
+  motion: {
+    id: 'motion',
+    name: 'Mozgás és mechanika',
+    description: '7. osztályos mozgás és mechanika alapfogalmak',
+    createFunction: letrehozMozgasPakli
+  },
+  thermal: {
+    id: 'thermal',
+    name: 'Hőtan és anyagszerkezet',
+    description: '7. osztályos hőtan és anyagszerkezet alapfogalmak',
+    createFunction: letrehozHotanPakli
+  }
+};
+
+/**
+ * Kártyapaklik kombinálása a kiválasztott opciók alapján
+ * @param {Array} selectedDeckIds A kiválasztott paklik azonosítói
+ * @returns {Array} A kombinált kártyapakli
+ */
+function createCombinedDeck(selectedDeckIds) {
+  let combinedCards = [];
+  
+  // Ha nincs kiválasztott pakli, akkor az alapértelmezett optikai paklit használjuk
+  if (!selectedDeckIds || selectedDeckIds.length === 0) {
+    selectedDeckIds = ['optics'];
+  }
+  
+  // Paklik kombinálása
+  for (const deckId of selectedDeckIds) {
+    if (CARD_DECKS[deckId] && typeof CARD_DECKS[deckId].createFunction === 'function') {
+      const deckCards = CARD_DECKS[deckId].createFunction();
+      combinedCards = combinedCards.concat(deckCards);
+    }
+  }
+  
+  // Kártyapakli megkeverése
+  combinedCards = shuffleArray(combinedCards);
+  
+  return combinedCards;
+}
+
+/**
+ * Optikai kártyapakli létrehozása
+ * @returns {Array} Az optikai kártyapakli
+ */
+function createOpticsDeck() {
+  const cards = [];
+  let cardId = 1;
+  
+  // Fogalom kártyák (kék)
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Fény',
+    description: 'Elektromágneses sugárzás, amely látható a szem számára.',
+    property: 'alapfogalom',
+    type: 'concept',
+    color: 'blue'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Fényforrás',
+    description: 'Olyan tárgy, amely fényt bocsát ki.',
+    property: 'alapfogalom',
+    type: 'concept',
+    color: 'blue'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Fénysebesség',
+    description: 'A fény sebessége vákuumban kb. 300 000 km/s.',
+    property: 'alapfogalom',
+    type: 'concept',
+    color: 'blue'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Átlátszó közeg',
+    description: 'Olyan anyag, amelyen a fény áthalad és látható képet ad.',
+    property: 'alapfogalom',
+    type: 'concept',
+    color: 'blue'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Átlátszatlan közeg',
+    description: 'Olyan anyag, amely nem engedi át a fényt.',
+    property: 'alapfogalom',
+    type: 'concept',
+    color: 'blue'
+  });
+  
+  // Törvény kártyák (piros)
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Fényvisszaverődés törvénye',
+    description: 'A beesési szög egyenlő a visszaverődési szöggel.',
+    property: 'törvény',
+    type: 'law',
+    color: 'red'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Fénytörés törvénye',
+    description: 'A beesési szög szinuszának és a törési szög szinuszának aránya állandó.',
+    property: 'törvény',
+    type: 'law',
+    color: 'red'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Teljes visszaverődés',
+    description: 'A fény nem lép ki az optikailag sűrűbb közegből, ha a beesési szög nagyobb a határszögnél.',
+    property: 'törvény',
+    type: 'law',
+    color: 'red'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Színfelbontás',
+    description: 'A fehér fény felbontása összetevőire, a szivárvány színeire.',
+    property: 'törvény',
+    type: 'law',
+    color: 'red'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Fényelnyelés',
+    description: 'Az anyagok a fény bizonyos összetevőit elnyelik, másokat visszaverik.',
+    property: 'törvény',
+    type: 'law',
+    color: 'red'
+  });
+  
+  // Tárgy kártyák (zöld)
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Síktükör',
+    description: 'Sík felületű tükör, amely ugyanakkora, de fordított állású látszólagos képet hoz létre.',
+    property: 'tükör',
+    type: 'object',
+    color: 'green'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Homorú tükör',
+    description: 'Befelé görbülő tükör, amely nagyított képet adhat.',
+    property: 'tükör',
+    type: 'object',
+    color: 'green'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Domború tükör',
+    description: 'Kifelé görbülő tükör, amely kicsinyített képet ad és nagyobb látószöget biztosít.',
+    property: 'tükör',
+    type: 'object',
+    color: 'green'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Gyűjtőlencse',
+    description: 'Középen vastagabb lencse, amely a párhuzamos fénysugarakat egy pontban gyűjti össze.',
+    property: 'lencse',
+    type: 'object',
+    color: 'green'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Szórólencse',
+    description: 'Szélein vastagabb lencse, amely a párhuzamos fénysugarakat szétszórja.',
+    property: 'lencse',
+    type: 'object',
+    color: 'green'
+  });
+  
+  // Eszköz kártyák (sárga)
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Mikroszkóp',
+    description: 'Kis tárgyak nagyított képének megfigyelésére szolgáló optikai eszköz.',
+    property: 'eszköz',
+    type: 'device',
+    color: 'yellow'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Távcső',
+    description: 'Távoli tárgyak megfigyelésére szolgáló optikai eszköz.',
+    property: 'eszköz',
+    type: 'device',
+    color: 'yellow'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Szemüveg',
+    description: 'Látáshibák korrigálására szolgáló optikai eszköz.',
+    property: 'eszköz',
+    type: 'device',
+    color: 'yellow'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Fényképezőgép',
+    description: 'A valóság képeinek rögzítésére szolgáló optikai eszköz.',
+    property: 'eszköz',
+    type: 'device',
+    color: 'yellow'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Vetítő',
+    description: 'Kis méretű képek kinagyítására és kivetítésére szolgáló optikai eszköz.',
+    property: 'eszköz',
+    type: 'device',
+    color: 'yellow'
+  });
+  
+  // Alkalmazás kártyák (lila)
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Emberi szem',
+    description: 'A látás szerve, amely a fényt érzékeli és képet alkot a környezetről.',
+    property: 'alkalmazás',
+    type: 'application',
+    color: 'purple'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Látáshibák',
+    description: 'A szem fókuszálási problémái, mint a rövidlátás, távollátás és asztigmatizmus.',
+    property: 'alkalmazás',
+    type: 'application',
+    color: 'purple'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Lézer',
+    description: 'Koherens, egyszínű fénysugarat kibocsátó eszköz.',
+    property: 'alkalmazás',
+    type: 'application',
+    color: 'purple'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Optikai kábel',
+    description: 'A teljes visszaverődés elvén működő, adattovábbításra használt eszköz.',
+    property: 'alkalmazás',
+    type: 'application',
+    color: 'purple'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Hologram',
+    description: 'Háromdimenziós kép létrehozására szolgáló fényképészeti technika.',
+    property: 'alkalmazás',
+    type: 'application',
+    color: 'purple'
+  });
+  
+  // Példa kártyák (narancs)
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Szivárvány',
+    description: 'Természetes jelenség, amikor az esőcseppek felbontják a napfényt színeire.',
+    property: 'példa',
+    type: 'example',
+    color: 'orange'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Délibáb',
+    description: 'Optikai jelenség, amikor a levegő fénytörése virtuális képet hoz létre.',
+    property: 'példa',
+    type: 'example',
+    color: 'orange'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Tükröződés vízen',
+    description: 'A vízfelszín visszaveri a fényt, és a tárgyak tükörképét mutatja.',
+    property: 'példa',
+    type: 'example',
+    color: 'orange'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Napfelkelte/naplemente',
+    description: 'A légkör fénytörése miatt a Nap látszólag a valódi helyzete fölött van.',
+    property: 'példa',
+    type: 'example',
+    color: 'orange'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Színkeverés',
+    description: 'Különböző színű fények keverése új színárnyalatokat eredményez.',
+    property: 'példa',
+    type: 'example',
+    color: 'orange'
+  });
+  
+  // Joker kártyák (fekete)
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Newton',
+    description: 'Isaac Newton fedezte fel, hogy a fehér fény színekre bontható.',
+    property: 'joker',
+    type: 'joker',
+    color: 'black'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Einstein',
+    description: 'Albert Einstein megmagyarázta a fény kettős természetét (hullám és részecske).',
+    property: 'joker',
+    type: 'joker',
+    color: 'black'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Prizma',
+    description: 'Háromoldalú optikai eszköz, amely felbontja a fehér fényt a szivárvány színeire.',
+    property: 'joker',
+    type: 'joker',
+    color: 'black'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Fényév',
+    description: 'Az a távolság, amelyet a fény egy év alatt tesz meg (kb. 9,46 billió km).',
+    property: 'joker',
+    type: 'joker',
+    color: 'black'
+  });
+  
+  cards.push({
+    id: (cardId++).toString(),
+    text: 'Spektroszkóp',
+    description: 'A fény spektrális összetételének vizsgálatára szolgáló eszköz.',
+    property: 'joker',
+    type: 'joker',
+    color: 'black'
+  });
+  
+  return cards;
+}
+
+/**
+ * Tömb elemeinek véletlenszerű keverése (Fisher-Yates algoritmus)
+ * @param {Array} array A keverendő tömb
+ * @returns {Array} A megkevert tömb
+ */
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+/**
  * Kártyatípusok meghatározása
  */
 const CARD_TYPES = {
