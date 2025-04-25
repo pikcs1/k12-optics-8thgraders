@@ -58,12 +58,24 @@ function createCombinedDeck(selectedDeckIds) {
     selectedDeckIds = ['optics'];
   }
   
+  // Ellenőrizzük, hogy vannak-e érvényes paklik a kiválasztottak között
+  let hasValidDeck = false;
+  
   // Paklik kombinálása
   for (const deckId of selectedDeckIds) {
     if (CARD_DECKS[deckId] && typeof CARD_DECKS[deckId].createFunction === 'function') {
       const deckCards = CARD_DECKS[deckId].createFunction();
       combinedCards = combinedCards.concat(deckCards);
+      hasValidDeck = true;
     }
+  }
+  
+  // Ha egyetlen érvényes pakli sincs, használjuk az alapértelmezett optikai paklit
+  if (!hasValidDeck) {
+    // Alapértelmezett pakli használata
+    const defaultDeckCards = CARD_DECKS['optics'].createFunction();
+    combinedCards = combinedCards.concat(defaultDeckCards);
+    console.log('Nem találtunk érvényes paklit, az alapértelmezett optikai paklit használjuk.');
   }
   
   // Kártyapakli megkeverése
