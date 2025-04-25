@@ -29,10 +29,18 @@ function canPlayCard(card, tableCard) {
 }
 
 /**
- * A játék paklijának létrehozása és megkeverése
+ * A játék paklijának létrehozása és megkeverése a kiválasztott kártyakészletek alapján
+ * @param {Array} selectedCardSets - A kiválasztott kártyakészletek azonosítói
+ * @returns {Array} A megkevert pakli
  */
-function createShuffledDeck() {
-  const cards = createDeck();
+function createShuffledDeck(selectedCardSets) {
+  // Ha nincs kiválasztott kártyakészlet, akkor az alapértelmezett optikai készletet használjuk
+  if (!selectedCardSets || !Array.isArray(selectedCardSets) || selectedCardSets.length === 0) {
+    selectedCardSets = ['optics'];
+  }
+  
+  // Kombinált pakli létrehozása a cards.gs fájlban definiált funkcióval
+  const cards = createCombinedDeck(selectedCardSets);
   return shuffleDeck(cards);
 }
 
