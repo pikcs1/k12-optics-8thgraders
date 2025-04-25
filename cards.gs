@@ -30,6 +30,18 @@ const CARD_DECKS = {
     name: 'Hőtan és anyagszerkezet',
     description: '7. osztályos hőtan és anyagszerkezet alapfogalmak',
     createFunction: letrehozHotanPakli
+  },
+  internet: {
+    id: 'internet',
+    name: 'Internet és közösségi média',
+    description: '5-8. osztályos internet biztonság és közösségi média alapok',
+    createFunction: letrehozInternetPakli
+  },
+  math: {
+    id: 'math',
+    name: 'Matematika',
+    description: '5-8. osztályos matematikai fogalmak és műveletek',
+    createFunction: letrehozMatematikaPakli
   }
 };
 
