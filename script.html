@@ -45,6 +45,27 @@
       return;
     }
     
+    // Kiválasztott kártyakészletek összegyűjtése
+    const selectedCardSets = [];
+    if (document.getElementById('opticsCardSet').checked) {
+      selectedCardSets.push('optics');
+    }
+    if (document.getElementById('electricityCardSet').checked) {
+      selectedCardSets.push('electricity');
+    }
+    if (document.getElementById('motionCardSet').checked) {
+      selectedCardSets.push('motion');
+    }
+    if (document.getElementById('thermalCardSet').checked) {
+      selectedCardSets.push('thermal');
+    }
+    
+    // Ellenőrizzük, hogy legalább egy készlet ki van-e választva
+    if (selectedCardSets.length === 0) {
+      showAlert('Kérlek, legalább egy kártyakészletet válassz ki!', 'warning');
+      return;
+    }
+    
     // Játékos név mentése Local Storage-ba
     localStorage.setItem('opticsCardGamePlayerName', playerName);
     
@@ -72,6 +93,20 @@
           // Adatok frissítése a várakozó képernyőn
           document.getElementById('gameIdDisplay').textContent = gameId;
           
+          // Kártyakészletek nevének megjelenítése a játéknaplóban 
+          if (selectedCardSets.length > 0) {
+            const deckNames = selectedCardSets.map(deckId => {
+              switch(deckId) {
+                case 'optics': return 'Optika';
+                case 'electricity': return 'Elektromosság';
+                case 'motion': return 'Mozgás és mechanika';
+                case 'thermal': return 'Hőtan és anyagszerkezet';
+                default: return deckId;
+              }
+            });
+            addLogEntry(`Kiválasztott kártyakészletek: ${deckNames.join(', ')}`);
+          }
+          
           // Játék állapot lekérdezésének indítása
           startGameStatePolling();
         } else {
@@ -83,7 +118,7 @@
         btn.disabled = false;
         showAlert('Hiba történt: ' + error, 'danger');
       })
-      .createGameRoom(playerName);
+      .createGameRoom(playerName, selectedCardSets);
   }
   
   // Csatlakozás játékszobához

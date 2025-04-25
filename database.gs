@@ -120,8 +120,13 @@ function createSheets(ss) {
 
 /**
  * Játékszoba inicializálása
+ * @param {string} gameId - A játékszoba azonosítója
+ * @param {string} creatorName - A játékszoba készítőjének neve
+ * @param {string} creatorId - A készítő játékos azonosítója
+ * @param {Array} selectedCardSets - A kiválasztott kártyakészletek azonosítói
+ * @returns {boolean} Sikeres inicializálás esetén true
  */
-function initializeGameRoom(gameId, creatorName, creatorId) {
+function initializeGameRoom(gameId, creatorName, creatorId, selectedCardSets) {
   try {
     const ss = initializeDatabase();
     
@@ -131,13 +136,15 @@ function initializeGameRoom(gameId, creatorName, creatorId) {
       throw new Error('A játékok munkalap nem található. Kérjük, ellenőrizze, hogy létezik-e.');
     }
     
+    // A kiválasztott kártyakészletek mentése is JSON formátumban
     gamesSheet.appendRow([
       gameId,
       'waiting',  // állapot: várakozás, playing, ended
       '',         // aktuálisJátékos
       '',         // nyertes
       '',         // asztalLap
-      new Date()  // létrehozva
+      new Date(), // létrehozva
+      JSON.stringify(selectedCardSets || ['optics']) // kártyakészletek
     ]);
     
     // Játékos hozzáadása
@@ -160,7 +167,8 @@ function initializeGameRoom(gameId, creatorName, creatorId) {
       throw new Error('A kártyák munkalap nem található. Kérjük, ellenőrizze, hogy létezik-e.');
     }
     
-    const deck = createShuffledDeck();
+    // A kiválasztott kártyakészletek alapján hozzuk létre a paklit
+    const deck = createShuffledDeck(selectedCardSets);
     cardsSheet.appendRow([
       gameId,
       JSON.stringify(deck)

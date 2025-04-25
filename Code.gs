@@ -78,8 +78,11 @@ function include(filename) {
 
 /**
  * Játékszoba létrehozása
+ * @param {string} playerName - A játékos neve
+ * @param {Array} selectedCardSets - A kiválasztott kártyakészletek azonosítói
+ * @returns {Object} A létrehozott játékszoba adatai
  */
-function createGameRoom(playerName) {
+function createGameRoom(playerName, selectedCardSets) {
   try {
     // Ellenőrizzük, hogy a globális változók inicializálva vannak-e
     if (!SPREADSHEET_ID) {
@@ -92,6 +95,11 @@ function createGameRoom(playerName) {
         success: false,
         error: 'A játékosnév megadása kötelező!'
       };
+    }
+    
+    // Ha nincs megadva kártyakészlet, használjuk az alapértelmezett optikai készletet
+    if (!selectedCardSets || !Array.isArray(selectedCardSets) || selectedCardSets.length === 0) {
+      selectedCardSets = ['optics'];
     }
     
     // Generáljuk az ID-kat
