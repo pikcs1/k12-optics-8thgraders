@@ -59,6 +59,12 @@
     if (document.getElementById('thermalCardSet').checked) {
       selectedCardSets.push('thermal');
     }
+    if (document.getElementById('internetCardSet').checked) {
+      selectedCardSets.push('internet');
+    }
+    if (document.getElementById('mathCardSet').checked) {
+      selectedCardSets.push('math');
+    }
     
     // Ellenőrizzük, hogy legalább egy készlet ki van-e választva
     if (selectedCardSets.length === 0) {
